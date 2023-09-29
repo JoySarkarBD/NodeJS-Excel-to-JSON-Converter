@@ -1,7 +1,7 @@
 // index.js (server/index.js)
 
 const app = require("./app");
-const port = process.env.PORT || 3000; // Define the port for the server to listen on
+const port = process.env.PORT || 3000; // Defining the port for the server to listen on
 
 // Starting the server and listen on the specified port
 app.listen(port, () => {
