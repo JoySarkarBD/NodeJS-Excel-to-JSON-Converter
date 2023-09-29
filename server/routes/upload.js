@@ -32,13 +32,28 @@ router.post("/upload", upload.single("file"), (req, res) => {
     }
 
     // Converting the worksheet to a JSON object
-    const jsonData = xlsx.utils.sheet_to_json(worksheet); // Parsing the worksheet into JSON format
+    const jsonData = xlsx.utils.sheet_to_json(worksheet, {
+      defval: "", // Set default value for empty cells to an empty string
+    }); // Parsing the worksheet into JSON format
+
+    // Function to check if all keys have empty values
+    function hasAllEmptyValues(obj) {
+      for (const key in obj) {
+        if (obj[key] !== "") {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Filter out objects where all keys have empty values
+    const filteredData = jsonData.filter((item) => !hasAllEmptyValues(item));
 
     // Log the JSON data to the console for debugging
-    console.log(jsonData);
+    console.log(filteredData);
 
     // Sending a response with the JSON data to the client
-    res.json({ data: jsonData });
+    res.json(filteredData);
   } catch (error) {
     // Handling any errors that occur during file upload or processing
     console.error(error);
