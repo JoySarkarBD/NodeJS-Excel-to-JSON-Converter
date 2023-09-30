@@ -1,71 +1,64 @@
-// upload.js (routes/upload.js)
+// upload.js
 
-// dependencies
+// Import necessary libraries
 const express = require("express");
 const multer = require("multer");
 const xlsx = require("xlsx");
 
-const router = express.Router(); // Express router instance
-const storage = multer.memoryStorage(); // multer to store uploaded files in memory
-const upload = multer({ storage: storage }); // multer instance with the specified storage
+// Create an Express router instance
+const router = express.Router();
 
-router.post("/upload", upload.single("file"), (req, res) => {
+// Configure multer to store uploaded files in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Define a route for handling file uploads
+router.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    // Checking if a file was uploaded
+    // Check if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Getting the uploaded file's buffer
+    // Extract the file buffer from the request
     const fileBuffer = req.file.buffer;
-    // Reading the Excel file from the buffer
-    const workbook = xlsx.read(fileBuffer, { type: "buffer" });
 
-    // Assuming the 'Defects' worksheet exists in the Excel file
-    const worksheet = workbook.Sheets["Defects"]; // Get the 'Defects' worksheet from the Excel file
+    // Read the Excel file from the buffer
+    const workbook = await readExcel(fileBuffer);
 
-    // Checking if the 'Defects' worksheet exists
+    // Get the 'Defects' worksheet from the Excel file
+    const worksheet = workbook.Sheets["Defects"];
+
+    // Check if the 'Defects' worksheet exists
     if (!worksheet) {
       return res
         .status(400)
         .json({ error: "Worksheet 'Defects' not found in the Excel file" });
     }
 
-    // Create a JSON array to store the data progressively
-    let jsonDataArray = [];
+    // Convert the worksheet to a JSON object
+    const jsonData = xlsx.utils.sheet_to_json(worksheet, {
+      defval: "", // Set default value for empty cells to an empty string
+    });
 
-    // Create a streaming JSON response
-    res.setHeader("Content-Type", "application/json");
-
-    // Create a readable stream from the worksheet data
-    const stream = xlsx.stream.to_json(worksheet);
-
-    // Handle each row of data as it's read from the stream
-    stream.on("data", (row) => {
-      // Function to check if all keys have empty values
-      function hasAllEmptyValues(obj) {
-        for (const key in obj) {
-          if (obj[key] !== "") {
-            return false;
-          }
+    // Function to check if all keys have empty values
+    function hasAllEmptyValues(obj) {
+      for (const key in obj) {
+        if (obj[key] !== "") {
+          return false;
         }
-        return true;
       }
+      return true;
+    }
 
-      // Check if the row has all empty values
-      if (!hasAllEmptyValues(row)) {
-        jsonDataArray.push(row);
-        // Send the row as a JSON object to the client
-        res.write(JSON.stringify(row));
-      }
-    });
+    // Filter out objects where all keys have empty values
+    const filteredData = jsonData.filter((item) => !hasAllEmptyValues(item));
 
-    // When the stream ends, send the complete JSON array
-    stream.on("end", () => {
-      res.end();
-      // Log the JSON data to the console for debugging
-      console.log(jsonDataArray);
-    });
+    // Log the JSON data to the console for debugging
+    console.log(filteredData);
+
+    // Sending a response with the JSON data to the client
+    res.json(filteredData);
   } catch (error) {
     // Handling any errors that occur during file upload or processing
     console.error(error);
@@ -73,4 +66,13 @@ router.post("/upload", upload.single("file"), (req, res) => {
   }
 });
 
+// Function to read an Excel file from a buffer and return a Promise
+const readExcel = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+    resolve(workbook);
+  });
+};
+
+// Export the router for use in the application
 module.exports = router;
