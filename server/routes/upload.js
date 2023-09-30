@@ -31,29 +31,41 @@ router.post("/upload", upload.single("file"), (req, res) => {
         .json({ error: "Worksheet 'Defects' not found in the Excel file" });
     }
 
-    // Converting the worksheet to a JSON object
-    const jsonData = xlsx.utils.sheet_to_json(worksheet, {
-      defval: "", // Set default value for empty cells to an empty string
-    }); // Parsing the worksheet into JSON format
+    // Create a JSON array to store the data progressively
+    let jsonDataArray = [];
 
-    // Function to check if all keys have empty values
-    function hasAllEmptyValues(obj) {
-      for (const key in obj) {
-        if (obj[key] !== "") {
-          return false;
+    // Create a streaming JSON response
+    res.setHeader("Content-Type", "application/json");
+
+    // Create a readable stream from the worksheet data
+    const stream = xlsx.stream.to_json(worksheet);
+
+    // Handle each row of data as it's read from the stream
+    stream.on("data", (row) => {
+      // Function to check if all keys have empty values
+      function hasAllEmptyValues(obj) {
+        for (const key in obj) {
+          if (obj[key] !== "") {
+            return false;
+          }
         }
+        return true;
       }
-      return true;
-    }
 
-    // Filter out objects where all keys have empty values
-    const filteredData = jsonData.filter((item) => !hasAllEmptyValues(item));
+      // Check if the row has all empty values
+      if (!hasAllEmptyValues(row)) {
+        jsonDataArray.push(row);
+        // Send the row as a JSON object to the client
+        res.write(JSON.stringify(row));
+      }
+    });
 
-    // Log the JSON data to the console for debugging
-    console.log(filteredData);
-
-    // Sending a response with the JSON data to the client
-    res.json(filteredData);
+    // When the stream ends, send the complete JSON array
+    stream.on("end", () => {
+      res.end();
+      // Log the JSON data to the console for debugging
+      console.log(jsonDataArray);
+    });
   } catch (error) {
     // Handling any errors that occur during file upload or processing
     console.error(error);
