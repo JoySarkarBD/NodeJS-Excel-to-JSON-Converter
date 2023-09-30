@@ -194,7 +194,6 @@ bower_components/
 build/
 
 # Ignore Hugo generated files
-/public/
 /resources/
 
 # Ignore Mac Finder metadata files
