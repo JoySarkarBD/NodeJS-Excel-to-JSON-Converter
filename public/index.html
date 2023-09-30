@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel File Upload</title>
+    <!-- Define the CSS styles for the page -->
+    <style>
+      /* Basic styling for the page */
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f7f7f7;
+        padding: 20px;
+      }
+
+      /* main container */
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      /*  main heading */
+      h1 {
+        color: #333;
+      }
+
+      /* form section */
+      form {
+        margin-top: 20px;
+      }
+
+      /* form labels */
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      /* file input */
+      input[type="file"] {
+        border: 1px solid #ddd;
+        padding: 10px;
+        width: 72%;
+        border-radius: 5px;
+      }
+
+      /*  upload button */
+      button[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      /* upload button on hover */
+      button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Main heading -->
+      <h1>Upload an Excel File</h1>
+      <!-- Form for uploading a file -->
+      <form action="api/upload" method="post" enctype="multipart/form-data">
+        <!-- Label for the file input -->
+        <label for="file">Select an Excel file:</label>
+        <!-- File input element with accept attribute for Excel files -->
+        <input type="file" id="file" name="file" accept=".xlsx" />
+        <!-- Upload button -->
+        <button type="submit">Upload</button>
+      </form>
+    </div>
+  </body>
+</html>
